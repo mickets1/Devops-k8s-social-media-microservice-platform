@@ -1,0 +1,53 @@
+# Local version
+apiVersion: skaffold/v2beta29
+kind: Config
+metadata:
+  name: litter-k8s
+build:
+  artifacts:
+  - image: react-app
+    context: ./react-app
+    docker:
+      dockerfile: ./react-app/Dockerfile.local
+  - image: follow
+    context: ./follow
+    docker:
+      dockerfile: ./follow/Dockerfile.local
+  - image: pedigree
+    context: ./pedigree
+    docker:
+      dockerfile: ./pedigree/Dockerfile.local
+  - image: lit
+    context: ./lit
+    docker:
+      dockerfile: ./lit/Dockerfile.local
+  - image: litterbox
+    context: ./litterbox
+    docker:
+      dockerfile: ./litterbox/Dockerfile.local
+  - image: gateway
+    context: ./gateway
+    docker:
+      dockerfile: ./gateway/Dockerfile.local
+  - image: auth
+    context: ./auth
+    docker:
+      dockerfile: ./auth/Dockerfile.local
+  
+deploy:
+  kubectl:
+    manifests:
+      - ./k8s/ingress-local.yaml
+      #- ./k8s/rabbitmq-pvc.yaml
+      #- ./k8s/mongodb-pvc.yaml
+      - ./k8s/react-app.yaml
+      - ./k8s/follow.yaml
+      - ./k8s/follow-mongodb.yaml
+      - ./k8s/pedigree.yaml
+      - ./k8s/pedigree-mongodb.yaml
+      - ./k8s/lit-mongodb.yaml
+      - ./k8s/lit.yaml
+      - ./k8s/litterbox.yaml
+      - ./k8s/gateway.yaml
+      - ./k8s/auth.yaml
+      - ./k8s/auth-mongodb.yaml

@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service.name: follow
+  name: follow
+spec:
+  type: NodePort # Using this to connect loadBalancer to in CSCloud..
+  ports:
+    - name: "follow-port"
+      port: 8896
+      targetPort: 8082
+  selector:
+    deployment.name: follow
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: follow
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment.name: follow
+  template:
+    metadata:
+      labels:
+        deployment.name: follow
+    spec:
+      containers:
+      - name: follow
+        # Live:
+        image: [IMAGE]:latest
+        #
+        # Local:
+        #image: follow
+        env:
+        - name: DB_CONNECTION_STRING
+          value: "mongodb://mongodb:27017/follows/testing"
+        - name: PORT
+          value: "8082"
+        - name: NODE_PORT
+          value: "3000"
+        - name: BASE_URL
+          value: "/follow"
+        - name: SESSION_NAME
+          value: "session"
+        - name: SESSION_SECRET
+          value: "[secret]"
+          
+        ports:
+          - containerPort: 8082
+      imagePullSecrets:
+      - name: regcred # Secret set as a secret in the cluster

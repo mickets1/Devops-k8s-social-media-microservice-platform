@@ -1,0 +1,52 @@
+# https://mattermost.com/blog/how-to-deploy-a-react-app-to-kubernetes-using-docker/
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service.name: react-app
+  name: react-app
+spec:
+  type: NodePort
+  ports:
+    - name: "react-app-port"
+      port: 8898
+      # Local:
+      #targetPort: 3000
+      #
+      # Live:
+      targetPort: 80
+  selector:
+    app: react-app
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: react-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: react-app
+  template:
+    metadata:
+      labels:
+        app: react-app
+    spec:
+      containers:
+        - name: react-app
+          # Live:
+          image: [IMAGEURL]:latest
+          #
+          # Local:
+          #image: react-app
+          env:
+          - name: SESSION_SECRET
+            value: "[secret]"
+          ports:
+            # Live:
+           - containerPort: 80
+            #
+            # Local:
+           #- containerPort: 3000
+      imagePullSecrets:
+      - name: regcred # Secret set as a secret in the cluster.

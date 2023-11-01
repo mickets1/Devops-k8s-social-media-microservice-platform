@@ -1,0 +1,8 @@
+# https://mattermost.com/blog/how-to-deploy-a-react-app-to-kubernetes-using-docker/
+FROM node:alpine
+WORKDIR /app
+COPY package.json ./
+COPY package-lock.json ./
+RUN npm install --force
+COPY ./ ./
+CMD [ "npm", "start" ]

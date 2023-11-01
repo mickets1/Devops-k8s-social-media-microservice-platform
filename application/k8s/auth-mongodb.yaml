@@ -1,0 +1,80 @@
+# This service is created to be able to tunnel in to MongoDB in development. In production the ingress server
+# should not expose this service..
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service.name: auth-mongodb
+  name: auth-mongodb
+spec:
+  ports:
+    - name: "27017"
+      port: 27017
+      targetPort: 27017
+  selector:
+    deployment.name: auth-mongodb
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    deployment.name: auth-mongodb
+  name: auth-mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment.name: auth-mongodb
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        deployment.name: auth-mongodb
+    spec:
+      containers:
+        - image: mongo:latest
+          name: auth-mongodb
+          ports:
+            - containerPort: 27017
+          resources: {}
+          volumeMounts:
+            - mountPath: /data/auth-db
+              name: auth-mongodb-claim
+      restartPolicy: Always
+      volumes:
+        - name: auth-mongodb-claim
+          persistentVolumeClaim:
+            claimName: auth-mongodb-claim
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: auth-mongodb-volume
+  labels:
+    type: local
+spec:
+  storageClassName: ""
+  capacity:
+    storage: 100Mi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/auth-db"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    persistentvolumeclaim.name: auth-mongodb-claim
+  name: auth-mongodb-claim
+spec:
+  volumeName: auth-mongodb-volume
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi

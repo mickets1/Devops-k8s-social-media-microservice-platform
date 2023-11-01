@@ -1,0 +1,169 @@
+stages:          # List of stages for jobs, and their order of execution
+  - build-react-app
+  - build-follow
+  - build-pedigree
+  - build-gateway
+  - build-lit
+  - build-auth
+  - build-litterbox
+  - staging
+  - deploy
+
+build:reactapp:
+  stage: build-react-app
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:  # See: https://docs.gitlab.com/ee/ci/docker/using_kaniko.html
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/application/react-app"  
+      --dockerfile "${CI_PROJECT_DIR}/application/react-app/Dockerfile.production"
+      --destination "${CI_REGISTRY_IMAGE}/application/react-app:${CI_COMMIT_TAG:-latest}"
+
+build:follow:
+  stage: build-follow
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:  # See: https://docs.gitlab.com/ee/ci/docker/using_kaniko.html
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/application/follow"  
+      --dockerfile "${CI_PROJECT_DIR}/application/follow/Dockerfile.production"
+      --destination "${CI_REGISTRY_IMAGE}/application/follow:${CI_COMMIT_TAG:-latest}"
+
+build:pedigree:
+  stage: build-pedigree
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:  # See: https://docs.gitlab.com/ee/ci/docker/using_kaniko.html
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/application/pedigree"  
+      --dockerfile "${CI_PROJECT_DIR}/application/pedigree/Dockerfile.production"
+      --destination "${CI_REGISTRY_IMAGE}/application/pedigree:${CI_COMMIT_TAG:-latest}"
+
+build:gateway:
+  stage: build-gateway
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:  # See: https://docs.gitlab.com/ee/ci/docker/using_kaniko.html
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/application/gateway"  
+      --dockerfile "${CI_PROJECT_DIR}/application/gateway/Dockerfile.production"
+      --destination "${CI_REGISTRY_IMAGE}/application/gateway:${CI_COMMIT_TAG:-latest}"
+
+build:lit:
+  stage: build-lit
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:  # See: https://docs.gitlab.com/ee/ci/docker/using_kaniko.html
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/application/lit"  
+      --dockerfile "${CI_PROJECT_DIR}/application/lit/Dockerfile.production"
+      --destination "${CI_REGISTRY_IMAGE}/application/lit:${CI_COMMIT_TAG:-latest}"
+
+build:litterbox:
+  stage: build-litterbox
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:  # See: https://docs.gitlab.com/ee/ci/docker/using_kaniko.html
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/application/litterbox"  
+      --dockerfile "${CI_PROJECT_DIR}/application/litterbox/Dockerfile.production"
+      --destination "${CI_REGISTRY_IMAGE}/application/litterbox:${CI_COMMIT_TAG:-latest}"
+
+build:auth:
+  stage: build-auth
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  script:  # See: https://docs.gitlab.com/ee/ci/docker/using_kaniko.html
+    - /kaniko/executor
+      --context "${CI_PROJECT_DIR}/application/auth"  
+      --dockerfile "${CI_PROJECT_DIR}/application/auth/Dockerfile.production"
+      --destination "${CI_REGISTRY_IMAGE}/application/auth:${CI_COMMIT_TAG:-latest}"
+
+staging:
+  stage: staging
+  image:
+    name: gcr.io/k8s-skaffold/skaffold:v2.0.0
+    entrypoint: ['']
+  environment:
+    name: production
+    url: $LITTER_STAGING_URL
+  when: manual
+  script:
+    - kubectl config get-contexts
+   # Configure kubectl to use our own k8s cluster, you need to setup an Gitlab agent in you k8s kluster
+    - kubectl config use-context $K8S_STAGING_CONTEXT
+   # Authorize the cluster to pull images from our registry. (synced against Deploy Token "gitlab-deploy-token")
+    - kubectl delete secret regcred || true
+    - kubectl create secret docker-registry regcred --docker-server=$CI_REGISTRY --docker-username=$CI_DEPLOY_USER --docker-password=$CI_DEPLOY_PASSWORD
+
+    # Apply manifests
+    #- kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/baremetal/deploy.yaml
+    - kubectl apply -f ./application/k8s/rabbitmq-pvc.yaml
+    - kubectl apply -f ./application/k8s/mongodb-pvc.yaml
+    - kubectl apply -f ./application/k8s/react-app.yaml
+    - kubectl apply -f ./application/k8s/follow.yaml
+    - kubectl apply -f ./application/k8s/follow-mongodb.yaml
+    - kubectl apply -f ./application/k8s/pedigree.yaml
+    - kubectl apply -f ./application/k8s/pedigree-mongodb.yaml
+    - kubectl apply -f ./application/k8s/gateway.yaml
+    - kubectl apply -f ./application/k8s/lit-mongodb.yaml
+    - kubectl apply -f ./application/k8s/lit.yaml
+    - kubectl apply -f ./application/k8s/auth.yaml
+    - kubectl apply -f ./application/k8s/auth-mongodb.yaml
+    - kubectl apply -f ./application/k8s/litterbox.yaml
+    - kubectl apply -f ./application/k8s/litterbox-mongodb.yaml
+    - kubectl apply -f ./application/k8s/staging-ingress.yaml
+    
+   # Debugging outputs after completion
+    - kubectl get events
+    - kubectl get deployments
+    - kubectl get services
+    - kubectl get pods
+    
+
+deploy:
+  stage: deploy
+  image:
+    name: gcr.io/k8s-skaffold/skaffold:v2.0.0
+    entrypoint: ['']
+  environment:
+    name: production
+    url: $LITTER_URL
+  when: manual
+  script:
+    - kubectl config get-contexts
+   # Configure kubectl to use our own k8s cluster, you need to setup an Gitlab agent in you k8s kluster
+    - kubectl config use-context $K8S_CONTEXT
+   # Authorize the cluster to pull images from our registry. (synced against Deploy Token "gitlab-deploy-token")
+    - kubectl delete secret regcred || true
+    - kubectl create secret docker-registry regcred --docker-server=$CI_REGISTRY --docker-username=$CI_DEPLOY_USER --docker-password=$CI_DEPLOY_PASSWORD
+
+    # Apply manifests
+    #- kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/baremetal/deploy.yaml
+    - kubectl apply -f ./application/k8s/rabbitmq-pvc.yaml
+    - kubectl apply -f ./application/k8s/mongodb-pvc.yaml
+    - kubectl apply -f ./application/k8s/react-app.yaml
+    - kubectl apply -f ./application/k8s/follow.yaml
+    - kubectl apply -f ./application/k8s/follow-mongodb.yaml
+    - kubectl apply -f ./application/k8s/pedigree.yaml
+    - kubectl apply -f ./application/k8s/pedigree-mongodb.yaml
+    - kubectl apply -f ./application/k8s/gateway.yaml
+    - kubectl apply -f ./application/k8s/lit-mongodb.yaml
+    - kubectl apply -f ./application/k8s/lit.yaml
+    - kubectl apply -f ./application/k8s/auth.yaml
+    - kubectl apply -f ./application/k8s/auth-mongodb.yaml
+    - kubectl apply -f ./application/k8s/litterbox.yaml
+    - kubectl apply -f ./application/k8s/litterbox-mongodb.yaml
+    - kubectl apply -f ./application/k8s/staging-ingress.yaml
+    
+   # Debugging outputs after completion
+    - kubectl get deployments
+    - kubectl get pods
+    - kubectl get services

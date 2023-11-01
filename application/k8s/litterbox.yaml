@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service.name: litterbox
+  name: litterbox
+spec:
+  type: NodePort
+  ports:
+    - name: 'litterbox-port'
+      port: 8899
+      targetPort: 8085
+  selector:
+    deployment.name: litterbox
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litterbox
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment.name: litterbox
+  template:
+    metadata:
+      labels:
+        deployment.name: litterbox
+    spec:
+      containers:
+        - name: litterbox
+          # Live:
+          image: [IMAGEURL]:latest
+          #
+          # Local:
+          #image: litterbox
+          env:
+            - name: DB_CONNECTION_STRING
+              value: 'mongodb://mongodb:27017/litterbox'
+            - name: PORT
+              value: '8085'
+            - name: NODE_PORT
+              value: '3000'
+            - name: BASE_URL
+              value: '/litterbox'
+            - name: SESSION_NAME
+              value: 'session'
+            - name: SESSION_SECRET
+              value: '[secret]'
+          ports:
+            - containerPort: 8085
+      imagePullSecrets:
+        - name: regcred # Secret set as a secret in the cluster

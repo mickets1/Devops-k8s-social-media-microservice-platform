@@ -1,0 +1,73 @@
+# Run this first to make it work.
+# kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.1.1/deploy/static/provider/baremetal/deploy.yaml
+#
+# More info (step 2 not needed) https://platform9.com/learn/v1.0/tutorials/nodeport-ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress
+  namespace: default
+  annotations:
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: '*.lnu.se'
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: react-app
+              port:
+                number: 8898
+    - host: '*.lnu.se'
+      http:
+        paths:
+          - path: /follow
+            pathType: Prefix
+            backend:
+              service:
+                name: follow
+                port:
+                  number: 8896
+    - host: '*.lnu.se'
+      http:
+        paths:
+          - path: /pedigree
+            pathType: Prefix
+            backend:
+              service:
+                name: pedigree
+                port:
+                  number: 8895                                   
+    - host: '*.lnu.se'
+      http:
+        paths:
+          - path: /gateway
+            pathType: Prefix
+            backend:
+              service:
+                name: gateway
+                port:
+                  number: 8894
+    - host: '*.lnu.se'
+      http:
+        paths:
+          - path: /lit
+            pathType: Prefix
+            backend:
+              service:
+                name: lit
+                port:
+                  number: 8893
+    - host: '*.lnu.se'
+      http:
+        paths:
+          - path: /litterbox
+            pathType: Prefix
+            backend:
+              service:
+                name: litterbox
+                port:
+                  number: 8899

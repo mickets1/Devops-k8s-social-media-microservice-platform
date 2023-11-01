@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service.name: auth
+  name: auth
+spec:
+  type: NodePort # Using this to connect loadBalancer to in CSCloud..
+  ports:
+    - name: 'auth-port'
+      port: 8893
+      targetPort: 8080
+  selector:
+    deployment.name: auth
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment.name: auth
+  template:
+    metadata:
+      labels:
+        deployment.name: auth
+    spec:
+      containers:
+        - name: auth
+          # Live:
+          image: [IMAGEURL]:latest
+          #
+          # Local:
+          #image: auth
+          env:
+            - name: DB_CONNECTION_STRING
+              value: 'mongodb://mongodb:27017/auth'
+            - name: PORT
+              value: '8080'
+            - name: NODE_PORT
+              value: '3000'
+            - name: BASE_URL
+              value: '/auth'
+            - name: SESSION_NAME
+              value: 'session'
+            - name: SESSION_SECRET
+              value: '[secret]'
+
+          ports:
+            - containerPort: 8080
+      imagePullSecrets:
+        - name: regcred # Secret set as a secret in the cluster

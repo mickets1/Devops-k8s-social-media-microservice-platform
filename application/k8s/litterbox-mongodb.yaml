@@ -1,0 +1,81 @@
+# This service is created to be able to tunnel in to MongoDB in development. In production the ingress server
+# should not expose this service.
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service.name: litterbox-mongodb
+  name: litterbox-mongodb
+spec:
+  ports:
+    - name: '27017'
+      port: 27017
+      targetPort: 27017
+  selector:
+    deployment.name: litterbox-mongodb
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    deployment.name: litterbox-mongodb
+  name: litterbox-mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment.name: litterbox-mongodb
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        deployment.name: litterbox-mongodb
+    spec:
+      containers:
+        - image: mongo:latest
+          name: litterbox-mongodb
+          ports:
+            - containerPort: 27017
+          resources: {}
+          volumeMounts:
+            - mountPath: /data/dblitterbox
+              name: litterbox-mongodb-claim
+      restartPolicy: Always
+      volumes:
+        - name: litterbox-mongodb-claim
+          persistentVolumeClaim:
+            claimName: litterbox-mongodb-claim
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: litterbox-mongo-volume
+  labels:
+    type: local
+spec:
+  storageClassName: ""
+  capacity:
+    storage: 100Mi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/dblitterbox"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    persistentvolumeclaim.name: litterbox-mongodb-claim
+  name: litterbox-mongodb-claim
+spec:
+  volumeName: litterbox-mongo-volume
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+

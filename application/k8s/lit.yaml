@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service.name: lit
+  name: lit
+spec:
+  type: NodePort
+  ports:
+    - name: "lit-port"
+      port: 8897
+      targetPort: 8081
+  selector:
+    deployment.name: lit
+status:
+  loadBalancer: {}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lit
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment.name: lit
+  template:
+    metadata:
+      labels:
+        deployment.name: lit
+    spec:
+      containers:
+      - name: lit
+        # Live:
+        image: [IMAGEURL]:latest
+        #
+        # Local:
+        #image: lit
+        env:
+        - name: DB_CONNECTION_STRING
+          value: "mongodb://mongodb:27017/lits"
+        - name: PORT
+          value: "8081"
+        - name: NODE_PORT
+          value: "3000"
+        - name: BASE_URL
+          value: "/lit"
+        - name: SESSION_NAME
+          value: "session"
+        - name: SESSION_SECRET
+          value: "[secret]"
+        ports:
+          - containerPort: 8081
+      imagePullSecrets:
+      - name: regcred # Secret set as a secret in the cluster.

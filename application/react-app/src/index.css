@@ -1,0 +1,107 @@
+/**
+ * This injects Tailwind's base styles and any base styles registered by
+ * plugins.
+ */
+/* @tailwind base; */
+
+/**
+  * This injects Tailwind's component classes and any component classes
+  * registered by plugins.
+  */
+/* @tailwind components; */
+
+/**
+  * This injects Tailwind's utility classes and any utility classes registered
+  * by plugins.
+  */
+/* @tailwind utilities; */
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 0 auto;
+  background: #f9fcf9;
+}
+#root {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  color: #1a3950;
+}
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #f9fcf9b4;
+  display: flex;
+  width: 960px;
+  margin: 2rem auto;
+  justify-content: center;
+  align-items: center;
+
+  box-shadow: 1px 1px 10px #8888883e;
+  padding: 2rem;
+}
+textarea {
+  outline: none;
+  border: none;
+}
+h2 {
+  font-size: xx-large;
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande',
+    'Lucida Sans', Arial, sans-serif;
+  border-left: 1rem solid #7bd7d9;
+  width: 80%;
+  text-align: center;
+  height: 4rem;
+}
+article {
+  width: 80%;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+article div {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+  background: white;
+  box-shadow: 1px 1px 10px #8888883e;
+}
+div p {
+  color: #1a3950;
+}
+input {
+  width: 20rem;
+  margin: 0.5rem 0;
+  border: none;
+  padding: 1rem;
+  border-radius: 4rem;
+  box-shadow: 1px 1px 3px #1a395018;
+}
+.login button {
+  margin: 0.5rem 0;
+  width: 22rem;
+  border-radius: 4rem;
+}

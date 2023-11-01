@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    persistentvolumeclaim.name: datadir-mongo-mongodb-0
+  name: datadir-mongo-mongodb-0
+spec:
+  volumeName: mongo-volume-0
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 8Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-volume-0
+  labels:
+    type: local
+spec:
+  storageClassName: ""
+  capacity:
+    storage: 8Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/db0"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    persistentvolumeclaim.name: datadir-mongo-mongodb-1
+  name: datadir-mongo-mongodb-1
+spec:
+  volumeName: mongo-volume-1
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 8Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mongo-volume-1
+  labels:
+    type: local
+spec:
+  storageClassName: ""
+  capacity:
+    storage: 8Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/db1"
